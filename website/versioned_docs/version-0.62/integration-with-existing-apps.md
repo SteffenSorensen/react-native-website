@@ -579,6 +579,33 @@ If you need to access to the `DevSettingsActivity` add to your `AndroidManifest.
 
 This is only used in dev mode when reloading JavaScript from the development server, so you can strip this in release builds if you need to.
 
+If you need to use a permission, which the user has to grant (API level 23+), e.g.:
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"
+
+Then your `Activity` has to implement the interface `PermissionAwareActivity`:
+
+```java
+public class MyReactActivity extends Activity implements DefaultHardwareBackBtnHandler, PermissionAwareActivity {
+...
+    private PermissionListener permissionListener;
+
+    @Override
+    public void requestPermissions(String[] permissions, int requestCode, PermissionListener listener) {
+        permissionListener = listener;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(permissions, requestCode);
+        }
+    }
+
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (permissionListener != null && permissionListener.onRequestPermissionsResult(requestCode, permissions, grantResults)) {
+            permissionListener = null;
+        }
+    }
+}
+```
+
 ### Cleartext Traffic (API level 28+)
 
 > Starting with Android 9 (API level 28), cleartext traffic is disabled by default; this prevents your application from connecting to the Metro bundler. The changes below allow cleartext traffic in debug builds.
